@@ -75,10 +75,15 @@ def make_pleco_script(exclude_target=False):
   const sentenceElem = document.querySelector('.sentence');
   if (!sentenceElem) return;
 
-  const simplified = '{{{{SentenceSimplified}}}}'.trim();
-  const pinyin = '{{{{SentencePinyin.2}}}}'.trim();
+  const simplified = sentenceElem.textContent.trim();
+  const pinyinRaw = '{{{{SentencePinyin.2}}}}'.trim();
 {exclude_check}
-  if (!simplified || !pinyin) return;
+  if (!simplified || !pinyinRaw) return;
+
+  // Strip HTML tags from pinyin
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = pinyinRaw;
+  const pinyin = tempDiv.textContent.trim();
 
   // Split pinyin by spaces to get word boundaries
   const pinyinWords = pinyin.split(/\\s+/);
@@ -89,9 +94,11 @@ def make_pleco_script(exclude_target=False):
     const clean = pinyinWord.replace(/[0-9.,!?;:，。！？；：""'']/g, '');
     if (!clean) return 0;
 
-    // Count contiguous vowel groups (each group = one syllable = one character)
-    const vowelGroups = clean.match(/[aeiouv]+/gi);
-    return vowelGroups ? vowelGroups.length : 0;
+    // Count consonant groups (each syllable starts with consonants or a vowel)
+    const consonantGroups = clean.match(/[bcdfghjklmnpqrstwxyz]+/gi);
+    const startsWithVowel = /^[aeiouv]/i.test(clean);
+
+    return (consonantGroups ? consonantGroups.length : 0) + (startsWithVowel ? 1 : 0);
   }}
 
   const charCounts = pinyinWords.map(countSyllables);
