@@ -94,11 +94,9 @@ def make_pleco_script(exclude_target=False):
     const clean = pinyinWord.replace(/[0-9.,!?;:，。！？；：""'']/g, '');
     if (!clean) return 0;
 
-    // Count consonant groups (each syllable starts with consonants or a vowel)
-    const consonantGroups = clean.match(/[bcdfghjklmnpqrstwxyz]+/gi);
-    const startsWithVowel = /^[aeiouv]/i.test(clean);
-
-    return (consonantGroups ? consonantGroups.length : 0) + (startsWithVowel ? 1 : 0);
+    // Count vowel groups (each syllable has exactly one vowel nucleus)
+    const vowelGroups = clean.match(/[aeiouv]+/gi);
+    return vowelGroups ? vowelGroups.length : 0;
   }}
 
   const charCounts = pinyinWords.map(countSyllables);
@@ -125,8 +123,8 @@ def make_pleco_script(exclude_target=False):
     const word = simplified.slice(charIndex, charIndex + count);
 
     if (word && /[\\u4e00-\\u9fff]/.test(word)) {{
-      // Only link if it contains Chinese characters and is not the target word
-      if (targetWord && word === targetWord) {{
+      // Only link if it contains Chinese characters and doesn't contain the target word
+      if (targetWord && word.includes(targetWord)) {{
         linkedWords.push(word);
       }} else {{
         linkedWords.push('<a href="plecoapi://x-callback-url/s?q=' + encodeURIComponent(word) + '">' + word + '</a>');
